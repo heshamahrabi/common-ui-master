@@ -1,0 +1,35 @@
+stages:
+  - build
+  - publish
+
+build:
+  stage: build
+  image:
+    name: node:lts-alpine
+    entrypoint: [""]
+  script:
+    - npm set registry https://nexus.denkformat.de/repository/npm/
+    - npm config set strict-ssl false
+    - echo "//nexus.denkformat.de/repository/npm/:_authToken=$GITLAB_NPM_TOKEN" > .npmrc
+    - less .npmrc
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - ./
+      
+publish:
+  stage: publish
+  image:
+    name: node:lts-alpine
+    entrypoint: [""]
+  script:
+    - npm set registry https://nexus.denkformat.de/repository/npm-local/
+    - npm config set strict-ssl false
+    # this token should be replaced with the GITLAB_NPM_TOKEN as soon as nexus' role settings have been corrected
+    # so that the nexus user can PUT (ADD/EDIT) into the registry
+    - echo "//nexus.denkformat.de/repository/npm-local/:_authToken=$ADMIN_NPM_TOKEN" > .npmrc
+    - less .npmrc
+    - npm publish
+  only:
+    - tags
